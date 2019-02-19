@@ -11,14 +11,18 @@ import kotlin.random.Random
 
 object UrlRequest {
 
-    fun getBilibiliDownloadUrl(av: String, callback: (String, String?) -> Unit) = httpAsync {
+    fun getBilibiliDownloadUrl(av: String, callback: (String, String?, String, String) -> Unit) = httpAsync {
         url = "http://api.bilibili.com/playurl?aid=$av&vtype=mp4&type=json"
         cookie = CookieJarImpl()
-        onSuccess { _, text, _ -> parseUrl(text) { u, u2 -> callback(u, u2) } }
-        onFail { callback("Error", "") }
+        onSuccess { _, text, _ -> parseUrl(text) { u, u2, u3, u4 -> callback(u, u2, u3, u4) } }
+        onFail {
+            val err = "Error"
+            callback(err, err, err, err)
+        }
     }
 
-    private fun parseUrl(jsonString: String?, callback: (String, String?) -> Unit) = try {
+    private fun parseUrl(jsonString: String?, callback: (String, String?, String, String) -> Unit) = try {
+        println(jsonString)
         val json = JSONObject(jsonString)
         val durl = json["durl"] as JSONObject
         val sec0 = durl["0"] as JSONObject
@@ -30,9 +34,12 @@ object UrlRequest {
                 u2 = bu["0"] as String
             }
         }
-        callback(u, u2)
+        val u3 = json["img"] as String
+        val u4 = json["cid"] as String
+        callback(u, u2, u3, u4)
     } catch (e: Throwable) {
-        callback("Error", "")
+        val err = "Error"
+        callback(err, err, err, err)
     }
 
     private const val domain = "bilibili.com"

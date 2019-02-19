@@ -1,10 +1,14 @@
 package com.rarnu.bdownload
 
+import com.rarnu.kt.common.DownloadState
+import com.rarnu.kt.common.downloadAsync
 import java.awt.*
 import java.awt.datatransfer.StringSelection
 import java.awt.event.ActionEvent
 import java.awt.event.ActionListener
 import java.awt.event.KeyEvent
+import java.io.File
+import java.net.URI
 import javax.swing.*
 import javax.swing.border.Border
 import javax.swing.border.EmptyBorder
@@ -14,22 +18,28 @@ class MainForm: JFrame("Get Bilibili Download URL"), ActionListener {
     private val edtAv: JTextField
     private val edtUrl: JTextField
     private val edtBack: JTextField
+    private val edtImg: JTextField
+    private val edtBullet: JTextField
     private val btnGetUrl: JButton
     private val btnCopyUrl: JButton
     private val btnCopyBack: JButton
+    private val btnDownloadImage: JButton
+    private val btnViewBullet: JButton
 
     init {
         contentPane.background = Color.white
-        setSize(500, 150)
+        (contentPane as JPanel).border = EmptyBorder(8, 8, 8, 8)
+        setSize(500, 200)
         isResizable = false
         defaultCloseOperation = EXIT_ON_CLOSE
         setLocationRelativeTo(null)
-        layout = BorderLayout()
 
-        fun buildPane(b: Border): JPanel {
+        layout = GridLayout(5, 1, 4, 4)
+
+
+        fun buildPane(): JPanel {
             val p = JPanel(BorderLayout())
             p.background = Color.white
-            p.border = b
             (p.layout as BorderLayout).hgap = 4
             return p
         }
@@ -56,44 +66,52 @@ class MainForm: JFrame("Get Bilibili Download URL"), ActionListener {
             return btn
         }
 
-        val avPane = buildPane(EmptyBorder(8, 8, 0, 8))
-        val urlPane = buildPane(EmptyBorder(8, 8, 8, 8))
-        val urlBackupPane = buildPane(EmptyBorder(0, 8, 8, 8))
+        val avPane = buildPane()
+        val urlPane = buildPane()
+        val urlBackupPane = buildPane()
+        val imgPane = buildPane()
+        val bulletPane = buildPane()
         buildLabel("av", avPane)
         buildLabel("URL", urlPane)
         buildLabel("Backup", urlBackupPane)
+        buildLabel("Image", imgPane)
+        buildLabel("Bullet", bulletPane)
         edtAv = buildTextField(avPane)
         edtUrl = buildTextField(urlPane, false)
         edtBack = buildTextField(urlBackupPane, false)
+        edtImg = buildTextField(imgPane, false)
+        edtBullet = buildTextField(bulletPane, false)
         btnGetUrl = buildButton("Get", avPane)
         btnCopyUrl = buildButton("Copy", urlPane)
         btnCopyBack = buildButton("Copy", urlBackupPane)
-
-        add(avPane, BorderLayout.NORTH)
-        add(urlPane, BorderLayout.CENTER)
-        add(urlBackupPane, BorderLayout.SOUTH)
-
-        btnGetUrl.addActionListener(this)
-        btnCopyUrl.addActionListener(this)
-        btnCopyBack.addActionListener(this)
-
+        btnDownloadImage = buildButton("View", imgPane)
+        btnViewBullet = buildButton("View", bulletPane)
+        add(avPane)
+        add(urlPane)
+        add(urlBackupPane)
+        add(imgPane)
+        add(bulletPane)
         setAvEditAction()
-
         isVisible = true
     }
 
     override fun actionPerformed(e: ActionEvent) {
+        println("clicked!")
         when(e.source) {
             btnGetUrl -> {
-                UrlRequest.getBilibiliDownloadUrl(edtAv.text) { u, u2 ->
+                UrlRequest.getBilibiliDownloadUrl(edtAv.text) { u, u2, u3, u4 ->
                     SwingUtilities.invokeLater {
                         edtUrl.text = u
                         edtBack.text = u2
+                        edtImg.text = u3
+                        edtBullet.text = u4
                     }
                 }
             }
             btnCopyUrl -> Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(edtUrl.text), null)
             btnCopyBack -> Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(edtBack.text), null)
+            btnDownloadImage -> openUrl(edtImg.text)
+            btnViewBullet -> openBullet(edtBullet.text)
         }
     }
 
@@ -107,10 +125,32 @@ class MainForm: JFrame("Get Bilibili Download URL"), ActionListener {
             override fun actionPerformed(e: ActionEvent) {
                 edtAv.selectAll()
             }
-
         })
         edtAv.inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_V, Event.META_MASK), "Paste")
         edtAv.inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.META_MASK), "SelectAll")
+    }
+
+    private fun openUrl(u: String) {
+        val path = System.getProperty("user.dir")
+        downloadAsync {
+            url = u
+            localFile = File(path, "tmp.jpg").absolutePath
+            progress { state, _, _, error ->
+                if (state == DownloadState.WHAT_DOWNLOAD_FINISH && error == null) {
+                    SwingUtilities.invokeLater {
+                        ViewImageForm(this@MainForm, localFile)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun openBullet(u: String) {
+        val uri = URI.create(u)
+        val desktop = Desktop.getDesktop()
+        if (desktop.isSupported(Desktop.Action.BROWSE)) {
+            desktop.browse(uri)
+        }
     }
 
 }

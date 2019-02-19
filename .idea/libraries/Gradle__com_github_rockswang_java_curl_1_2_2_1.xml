@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="Gradle: com.github.rockswang:java-curl:1.2.2.1">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.github.rockswang/java-curl/1.2.2.1/c52ff7dd9f5b22431413a9fa54b35d18cd1c16c6/java-curl-1.2.2.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.github.rockswang/java-curl/1.2.2.1/3e699a4068b52664f058c88e967f37918aae73d/java-curl-1.2.2.1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
