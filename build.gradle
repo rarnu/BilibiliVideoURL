@@ -13,9 +13,6 @@ repositories {
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     compile fileTree(dir: 'lib', include: ['*.jar'])
-    compile "com.github.rockswang:java-curl:1.2.2.1"
-
-
 }
 
 mainClassName = 'com.rarnu.bdownload.MainKt'

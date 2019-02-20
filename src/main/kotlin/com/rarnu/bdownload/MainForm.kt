@@ -2,6 +2,7 @@ package com.rarnu.bdownload
 
 import com.rarnu.kt.common.DownloadState
 import com.rarnu.kt.common.downloadAsync
+import com.rarnu.kt.common.swingMainThread
 import java.awt.*
 import java.awt.datatransfer.StringSelection
 import java.awt.event.ActionEvent
@@ -13,7 +14,7 @@ import javax.swing.*
 import javax.swing.border.Border
 import javax.swing.border.EmptyBorder
 
-class MainForm: JFrame("Get Bilibili Download URL"), ActionListener {
+class MainForm : JFrame("Get Bilibili Download URL"), ActionListener {
 
     private val edtAv: JTextField
     private val edtUrl: JTextField
@@ -96,11 +97,10 @@ class MainForm: JFrame("Get Bilibili Download URL"), ActionListener {
     }
 
     override fun actionPerformed(e: ActionEvent) {
-        println("clicked!")
-        when(e.source) {
+        when (e.source) {
             btnGetUrl -> {
                 UrlRequest.getBilibiliDownloadUrl(edtAv.text) { u, u2, u3, u4 ->
-                    SwingUtilities.invokeLater {
+                    swingMainThread {
                         edtUrl.text = u
                         edtBack.text = u2
                         edtImg.text = u3
@@ -110,7 +110,7 @@ class MainForm: JFrame("Get Bilibili Download URL"), ActionListener {
             }
             btnCopyUrl -> Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(edtUrl.text), null)
             btnCopyBack -> Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(edtBack.text), null)
-            btnDownloadImage -> openUrl(edtImg.text)
+            btnDownloadImage -> openImage(edtImg.text)
             btnViewBullet -> openBullet(edtBullet.text)
         }
     }
@@ -130,16 +130,14 @@ class MainForm: JFrame("Get Bilibili Download URL"), ActionListener {
         edtAv.inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, Event.META_MASK), "SelectAll")
     }
 
-    private fun openUrl(u: String) {
+    private fun openImage(u: String) {
         val path = System.getProperty("user.dir")
         downloadAsync {
             url = u
             localFile = File(path, "tmp.jpg").absolutePath
             progress { state, _, _, error ->
                 if (state == DownloadState.WHAT_DOWNLOAD_FINISH && error == null) {
-                    SwingUtilities.invokeLater {
-                        ViewImageForm(this@MainForm, localFile)
-                    }
+                    swingMainThread { ViewImageForm(this@MainForm, localFile) }
                 }
             }
         }
